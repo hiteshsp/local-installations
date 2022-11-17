@@ -1,0 +1,5 @@
+---
+# handlers file for softwares
+- name: started microk8s
+  command: microk8s status --wait-ready
+

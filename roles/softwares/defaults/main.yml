@@ -1,0 +1,22 @@
+---
+# defaults file for softwares
+
+apt_packages:
+  - git
+  - curl
+
+deb_packages:
+  - name: vscode
+    url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+    dest: /home/hiteshwara/tools/downloads/code.dpkg
+
+snap_packages:
+  - name: microk8s
+    classic: yes
+
+microk8s_plugins:
+  - community
+  - dashboard
+  - dns
+  - registry
+  - istio 
