@@ -1,0 +1,51 @@
+---
+# defaults file for softwares
+
+apt_packages:
+  - git
+  - curl
+  - fontconfig 
+  - openjdk-11-jre
+  - jenkins
+
+deb_packages:
+  - name: vscode
+    url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+    dest: /home/hiteshwara/tools/downloads/code.deb
+  - name: drawio
+    url: https://github.com/jgraph/drawio-desktop/releases/download/v20.3.0/drawio-amd64-20.3.0.deb
+    dest: /home/hiteshwara/tools/downloads/drawio.deb
+
+curl_packages:
+  - name: helm
+    script: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /home/hiteshwara/tools/downloads/get_helm.sh
+    mode: '0700'
+  - name: docker
+    script: https://get.docker.com
+    dest: /home/hiteshwara/tools/downloads/get_docker.sh
+    mode: '0700'
+
+snap_packages:
+  - name: microk8s
+    classic: yes
+
+microk8s_plugins:
+  - community
+  - dashboard
+  - dns
+  - registry
+  - istio 
+
+vscode_extension_ids:
+  - codeSTACKr.codestackr-theme
+  - redhat.ansible
+  - ms-python.python
+  - redhat.vscode-yaml
+  
+jenkins_plugin_list:
+  - github-organization-folder
+  - docker-workflow
+
+jenkins_username: admin
+jenkins_password: Welcome@1234
