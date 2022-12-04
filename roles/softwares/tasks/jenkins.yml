@@ -1,0 +1,63 @@
+---
+- name: Install Jenkins
+  block:
+    - name: Jenkins repo | no apt key
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+      become: yes
+      
+    - name: Jenkins repo | apt source
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"      
+        state: present
+      become: yes
+    
+    - name: Jenkins | Install the package     
+      ansible.builtin.apt:
+        name: jenkins
+        state: "present"
+        update_cache: yes      
+      become: yes
+
+    - name: Install Jenkins Plugins
+      community.general.jenkins_plugin:
+        name: "{{ item }}"
+        force_basic_auth: true
+        url_username: "{{ jenkins_username }}"
+        url_password: "{{ jenkins_password }}"
+        state: latest
+      register: jenkins_plugins_latest
+      loop: "{{ jenkins_plugin_list }}"
+      become: yes
+
+    - name: Check if restart is required by any of the unversioned plugins
+      ansible.builtin.set_fact:
+        jenkins_restart_required: true
+      when: item.changed
+      loop: "{{ jenkins_plugins_latest.results }}"
+
+    - name: Restart Jenkins if required
+      ansible.builtin.service:
+        name: jenkins
+        state: restarted
+      when: jenkins_restart_required
+      become: yes
+
+    - name: Wait for Jenkins to start up
+      ansible.builtin.uri:
+        url: http://localhost:8080
+        status_code: 200
+        timeout: 5
+        force_basic_auth: true
+        url_username: "{{ jenkins_username }}"
+        url_password: "{{ jenkins_password }}"
+      register: jenkins_service_status
+          # Keep trying for 5 mins in 5 sec intervals
+      retries: 60
+      delay: 5
+      until: >
+          'status' in jenkins_service_status and
+            jenkins_service_status['status'] == 200
+      when: jenkins_restart_required
+

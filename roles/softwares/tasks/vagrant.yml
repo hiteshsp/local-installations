@@ -1,0 +1,20 @@
+---
+- name: Install Vagrant
+  block:   
+    - name: Vagrant | Import apt key
+      ansible.builtin.apt_key:
+        url:  https://apt.releases.hashicorp.com/gpg                
+      become: yes
+
+    - name: Vagrant | Import the repo
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/trusted.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+        state: present            
+      become: yes
+  
+    - name: Vagrant | Install the package     
+      ansible.builtin.apt:
+        name: vagrant
+        state: "present"
+        update_cache: yes      
+      become: yes

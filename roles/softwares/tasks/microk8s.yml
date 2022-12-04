@@ -1,0 +1,4 @@
+---
+- name: Enable microk8s plugins
+  command: "microk8s enable {{ item }}"
+  loop: "{{ microk8s_plugins }}"

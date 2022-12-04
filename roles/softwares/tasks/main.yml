@@ -7,27 +7,15 @@
     mode: "{{ item.mode }}"
   loop: "{{ curl_packages }}" 
 
-- name: "Install {{ item.name }}"
+- name: Installing {{ item.name }}
   command: "bash {{ item.dest }}"
   loop: "{{ curl_packages }}"
 
-- name: Install Jenkins repo
-  block:
-    - name: Jenkins repo | no apt key
-      ansible.builtin.get_url:
-        url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
-        dest: /usr/share/keyrings/jenkins-keyring.asc
-
-    - name: Jenkins repo | apt source
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/"
-        state: present
-      become: yes
-
-- name: Install apt packages
+- name: Installing {{ item }} packages 
   ansible.builtin.apt:
     name: "{{ item }}"
     state: "present"
+    update_cache: yes
   loop: "{{ apt_packages }}"
   become: yes
 
@@ -38,13 +26,11 @@
     mode: '0755'
   loop: "{{ deb_packages }}"
 
-
 - name: Install the deb package
   ansible.builtin.apt:
     deb: "{{ item.dest }}"
   loop: "{{ deb_packages }}"
   become: yes
-
  
 - name: "Installing {{ item }} packages"
   community.general.snap:
@@ -54,51 +40,12 @@
   become: yes
   notify: started microk8s
 
-- name: Enable microk8s plugins
-  command: "microk8s enable {{ item }}"
-  loop: "{{ microk8s_plugins }}"
- 
-- name: Install new code extensions
-  command: "code --install-extension {{ item }}"
-  loop: "{{ vscode_extension_ids  }}"
+- include_tasks: microk8s.yml
 
-- name: Install Jenkins Plugins
-  community.general.jenkins_plugin:
-    name: "{{ item }}"
-    force_basic_auth: true
-    url_username: "{{ jenkins_username }}"
-    url_password: "{{ jenkins_password }}"
-    state: latest
-  register: jenkins_plugins_latest
-  loop: "{{ jenkins_plugin_list }}"
-  become: yes
+- include_tasks: vscode.yml
 
-- name: Check if restart is required by any of the unversioned plugins
-  ansible.builtin.set_fact:
-    jenkins_restart_required: true
-  when: item.changed
-  loop: "{{ jenkins_plugins_latest.results }}"
+- include_tasks: jenkins.yml
 
-- name: Restart Jenkins if required
-  ansible.builtin.service:
-    name: jenkins
-    state: restarted
-  when: jenkins_restart_required
-  become: yes
+- include_tasks: virtualbox.yml
 
-- name: Wait for Jenkins to start up
-  ansible.builtin.uri:
-    url: http://localhost:8080
-    status_code: 200
-    timeout: 5
-    force_basic_auth: true
-    url_username: "{{ jenkins_username }}"
-    url_password: "{{ jenkins_password }}"
-  register: jenkins_service_status
-      # Keep trying for 5 mins in 5 sec intervals
-  retries: 60
-  delay: 5
-  until: >
-       'status' in jenkins_service_status and
-        jenkins_service_status['status'] == 200
-  when: jenkins_restart_required
+- include_tasks: vagrant.yml

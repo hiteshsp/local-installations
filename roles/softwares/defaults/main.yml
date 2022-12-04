@@ -6,7 +6,6 @@ apt_packages:
   - curl
   - fontconfig 
   - openjdk-11-jre
-  - jenkins
 
 deb_packages:
   - name: vscode

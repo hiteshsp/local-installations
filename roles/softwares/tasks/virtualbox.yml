@@ -1,0 +1,26 @@
+---
+- name: Install Virtualbox
+  block:   
+    - name: Virtualbox | Downloag gpg key
+      ansible.builtin.get_url:
+        url: https://www.virtualbox.org/download/oracle_vbox_2016.asc
+        dest: /etc/apt/trusted.gpg.d/oracle-virtualbox-2016.asc
+      become: yes
+
+    # - name: Virtualbox | Import the gpg key
+    #   ansible.builtin.apt_key:
+    #     file: /usr/share/keyrings/oracle-virtualbox-2016.gpg
+    #   become: yes
+
+    - name: Virtualbox | Import the repo
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/oracle-virtualbox-2016.asc] https://download.virtualbox.org/virtualbox/debian {{ ansible_distribution_release }} contrib"        
+        state: present            
+      become: yes
+  
+    - name: Virtualbox | Install the package     
+      ansible.builtin.apt:
+        name: virtualbox
+        state: "present"
+        update_cache: yes      
+      become: yes
